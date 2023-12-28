@@ -4,6 +4,15 @@ const BASE_URL = `http://localhost:8000`;
 
 const CitiesContext = createContext();
 
+const flagemojiToPNG = (flag) => {
+  var countryCode = Array.from(flag, (codeUnit) => codeUnit.codePointAt())
+    .map((char) => String.fromCharCode(char - 127397).toLowerCase())
+    .join("");
+  return (
+    <img src={`https://flagcdn.com/24x18/${countryCode}.png`} alt="flag" />
+  );
+};
+
 function CitiesProvider({ children }) {
   const [cities, setCities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +25,6 @@ function CitiesProvider({ children }) {
         const res = await fetch(`${BASE_URL}/cities`);
         const data = await res.json();
         setCities(data);
-        console.log(data);
       } catch (error) {
         console.log("there was an error loading the data");
       } finally {
@@ -32,6 +40,24 @@ function CitiesProvider({ children }) {
       const res = await fetch(`${BASE_URL}/cities/${id}`);
       const data = await res.json();
       setCurrentCity(data);
+    } catch (error) {
+      console.log("there was an error loading the data");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  async function createCity(newCity) {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`${BASE_URL}/cities/`, {
+        method: "POST",
+        body: JSON.stringify(newCity),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      setCities((cities) => [...cities, data]);
       console.log(data);
     } catch (error) {
       console.log("there was an error loading the data");
@@ -42,10 +68,12 @@ function CitiesProvider({ children }) {
   return (
     <CitiesContext.Provider
       value={{
+        flagemojiToPNG,
         cities,
         isLoading,
         currentCity,
         getCity,
+        createCity,
       }}
     >
       {children}
